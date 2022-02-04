@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NftSwapContract is IERC721Receiver {
-    enum State {newSwap, sellerNftDeposited, sellerCanceled, buyerNftDeposited, buyerCanceled, completed}
+    enum State {newSwap, sellerNftDeposited, sellerCanceled, buyerNftDeposited, completed}
     
     address payable public sellerAddress;
     address payable public buyerAddress;
@@ -39,7 +39,7 @@ contract NftSwapContract is IERC721Receiver {
         state = State.sellerNftDeposited;
     }
     
-    function sellerCancelNFT()
+    function sellerCancel()
         public
         inState(State.sellerNftDeposited)
         onlySeller
@@ -60,26 +60,42 @@ contract NftSwapContract is IERC721Receiver {
         state = State.buyerNftDeposited;
     }
     
-    function buyerCancelNFT()
+    function buyerCancel()
         public
         inState(State.buyerNftDeposited)
         onlyBuyer
     {
         ERC721(buyerNftAddress).safeTransferFrom(address(this), msg.sender, buyerTokenID);
-        state = State.buyerCanceled;
+        delete buyerAddress;
+        delete buyerNftAddress;
+        delete buyerTokenID;
+        state = State.sellerNftDeposited;
+    }
+
+    function sellerDecline()
+        public
+        inState(State.buyerNftDeposited)
+        onlySeller
+    {
+        // return NFT to buyer
+        ERC721(buyerNftAddress).safeTransferFrom(address(this), buyerAddress, buyerTokenID);
+        delete buyerAddress;
+        delete buyerNftAddress;
+        delete buyerTokenID;
+        state = State.sellerNftDeposited;
     }
   
-    function approve(bool _state)
+    function approve()
         public
         inState(State.buyerNftDeposited)
         BuyerOrSeller
     {
         if (msg.sender == sellerAddress){
-            sellerApprove = _state;
+            sellerApprove = true;
             console.log("seller approve: %s", sellerApprove);
         }
         else{
-            buyerApprove = _state;
+            buyerApprove = true;
             console.log("buyer approve: %s", buyerApprove);
         }
         
