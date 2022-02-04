@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NftSwapContract is IERC721Receiver {
-    enum State {newSwap, sellerNftDeposited, sellerCanceled, buyerNftDeposited, buyerCanceled, completed}
+    enum State {newSwap, sellerNftDeposited, sellerCanceled, buyerNftDeposited, completed}
     
     address payable public sellerAddress;
     address payable public buyerAddress;
