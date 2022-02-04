@@ -1,11 +1,22 @@
 const main = async () => {
     const [owner, randomPerson] = await hre.ethers.getSigners();
 
-    const nftSwapContractFactory = await hre.ethers.getContractFactory('NftSwapContract');
-    const nftSwapContract = await nftSwapContractFactory.deploy();
-    await nftSwapContract.deployed();
-    console.log("NftSwapContract deployed to:", nftSwapContract.address);
-    console.log("NftSwapContract deployed by:", owner.address);
+    const nftSwapContractFactoryFactory = await hre.ethers.getContractFactory('NftSwapContractFactory');
+    const nftSwapContractFactory = await nftSwapContractFactoryFactory.deploy();
+    await nftSwapContractFactory.deployed();
+
+    console.log("nftSwapContractFactory deployed to:", nftSwapContractFactory.address);
+    console.log("nftSwapContractFactory deployed by:", owner.address);
+    await nftSwapContractFactory.createNftSwapContract();
+    contracts = await nftSwapContractFactory.getNftSwapContracts();
+    nftSwapContract = contracts[0];
+    console.log("nftSwapContract deployed to: %s", nftSwapContract.address);
+
+    // const nftSwapContractFactory = await hre.ethers.getContractFactory('NftSwapContract');
+    // const nftSwapContract = await nftSwapContractFactory.deploy();
+    // await nftSwapContract.deployed();
+    // console.log("NftSwapContract deployed to:", nftSwapContract.address);
+    // console.log("NftSwapContract deployed by:", owner.address);
 
     const nftContractFactory = await hre.ethers.getContractFactory('MyTestNFT');
     const nftContract = await nftContractFactory.deploy();
@@ -19,8 +30,9 @@ const main = async () => {
     tokenId = txn.value
 
     console.log("txn %s", txn)
-    // buyer approve NFT transfer to escrow
+    // seller approve NFT transfer to escrow
     await nftContract.approve(nftSwapContract.address, 0)
+    console.log("seller approved NFT transfer");
     // deposit nft to nftSwapContract
     await nftSwapContract.sellerDepositNFT(nftContract.address, 0)
     

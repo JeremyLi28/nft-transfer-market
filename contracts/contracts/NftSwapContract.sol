@@ -20,6 +20,7 @@ contract NftSwapContract is IERC721Receiver {
 
     constructor()
     {
+        sellerAddress = payable(msg.sender);
         state = State.newSwap;
     }
     
@@ -31,7 +32,6 @@ contract NftSwapContract is IERC721Receiver {
         public
         inState(State.newSwap)
     {
-        sellerAddress = payable(msg.sender);
         sellerNftAddress = _NFTAddress;
         sellerTokenID = _TokenID;
         ERC721(sellerNftAddress).safeTransferFrom(msg.sender, address(this), sellerTokenID);
