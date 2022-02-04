@@ -37,6 +37,78 @@ const theme = createTheme();
 const App = () => {
   const [nftAddress, setNftAddress] = React.useState('');
   const [tokenId, setTokenId] = React.useState('');
+  const [currentAccount, setCurrentAccount] = React.useState("");
+    
+  const checkIfWalletIsConnected = async () => {
+    const { ethereum } = window;
+
+    if (!ethereum) {
+        console.log("Make sure you have metamask!");
+        return;
+    } else {
+        console.log("We have the ethereum object", ethereum);
+    }
+
+    const accounts = await ethereum.request({ method: 'eth_accounts' });
+
+    if (accounts.length !== 0) {
+        const account = accounts[0];
+        console.log("Found an authorized account:", account);
+        setCurrentAccount(account)
+    } else {
+        console.log("No authorized account found")
+    }
+  }
+
+  const connectWallet = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        alert("Get MetaMask!");
+        return;
+      }
+
+      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+
+      console.log("Connected", accounts[0]);
+      setCurrentAccount(accounts[0]);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  React.useEffect(() => {
+    checkIfWalletIsConnected();
+  }, [])
+
+  const renderNotConnectedContainer = () => (
+    <Button variant="contained" onClick={connectWallet}>Connect to Wallet</Button>
+  );
+
+  const renderSellNFTUI = () => (
+    <Container maxWidth="sm">
+      <Stack
+        sx={{ pt: 4 }}
+        direction="row"
+        spacing={2}
+        justifyContent="center"
+      >
+      <TextField id="outlined-basic" label="nft address" variant="outlined" value={nftAddress} onInput={e => setNftAddress(e.target.value)}/>
+      <TextField id="outlined-basic" label="token id" variant="outlined" value={tokenId} onInput={e => setTokenId(e.target.value)}/>
+      </Stack>
+      <Stack
+        sx={{ pt: 4 }}
+        direction="row"
+        spacing={2}
+        justifyContent="center"
+      >
+        <Button variant="contained">Sell NFT</Button>
+      </Stack>
+  </Container>
+  );
+
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -70,24 +142,8 @@ const App = () => {
             <Typography variant="h5" align="center" color="text.secondary" paragraph>
               In NFT Transfer Market, you can swap your NFT with anyone else in the world!
             </Typography>
-            <Stack
-              sx={{ pt: 4 }}
-              direction="row"
-              spacing={2}
-              justifyContent="center"
-            >
-            <TextField id="outlined-basic" label="nft address" variant="outlined" value={nftAddress} onInput={e => setNftAddress(e.target.value)}/>
-            <TextField id="outlined-basic" label="token id" variant="outlined" value={tokenId} onInput={e => setTokenId(e.target.value)}/>
-            </Stack>
-            <Stack
-              sx={{ pt: 4 }}
-              direction="row"
-              spacing={2}
-              justifyContent="center"
-            >
-              <Button variant="contained">Sell NFT</Button>
-            </Stack>
           </Container>
+          {currentAccount === "" ? renderNotConnectedContainer() : renderSellNFTUI()}
         </Box>
         <Container sx={{ py: 8 }} maxWidth="md">
           {/* End hero unit */}
