@@ -69,6 +69,8 @@ contract NftSwapContract is IERC721Receiver {
         delete buyerAddress;
         delete buyerNftAddress;
         delete buyerTokenID;
+        delete sellerApprove;
+        delete buyerApprove;
         state = State.sellerNftDeposited;
     }
 
@@ -82,6 +84,8 @@ contract NftSwapContract is IERC721Receiver {
         delete buyerAddress;
         delete buyerNftAddress;
         delete buyerTokenID;
+        delete sellerApprove;
+        delete buyerApprove;
         state = State.sellerNftDeposited;
     }
   
