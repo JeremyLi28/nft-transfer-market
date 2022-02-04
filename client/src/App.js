@@ -16,6 +16,8 @@ import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ethers } from "ethers";
+import abi from './utils/NftSwapContract.json';
 
 function Copyright() {
   return (
@@ -38,6 +40,8 @@ const App = () => {
   const [nftAddress, setNftAddress] = React.useState('');
   const [tokenId, setTokenId] = React.useState('');
   const [currentAccount, setCurrentAccount] = React.useState("");
+  const contractAddress = "0x15532151cc1c320D9620E7352266DD2A4a6CC62d";
+  const contractABI = abi.abi;
     
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -112,11 +116,32 @@ const App = () => {
         spacing={2}
         justifyContent="center"
       >
-        <Button variant="contained" size="large">Sell NFT</Button>
+        <Button variant="contained" size="large" onClick={submitSell}>Sell NFT</Button>
       </Stack>
   </Container>
   );
 
+  const submitSell = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+        
+        const txn = await nftSwapContract.sellerDepositNFT(nftAddress, tokenId, { gasLimit: 300000 });
+        console.log("Mining...", txn.hash);
+
+        await txn.wait();
+        console.log("Mined -- ", txn.hash);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <ThemeProvider theme={theme}>
