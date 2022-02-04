@@ -30,13 +30,18 @@ const main = async () => {
     // Wait for it to be mined.
     await txn.wait()
     tokenId = txn.value
-
     console.log("txn %s", txn)
+
     // seller approve NFT transfer to escrow
-    await nftContract.approve(nftSwapContract.address, 0)
+    txn = await nftContract.approve(nftSwapContract.address, 0)
+    await txn.wait()
     console.log("seller approved NFT transfer");
+
     // deposit nft to nftSwapContract
-    await nftSwapContract.sellerDepositNFT(nftContract.address, 0)
+    txn = await nftSwapContract.sellerDepositNFT(nftContract.address, 0)
+    await txn.wait()
+    console.log("sellerNftAddress :", await nftSwapContract.getSellerNftAddress());
+    console.log("sellerTokenID :", await nftSwapContract.getSellerTokenID());
     
     let txn1 = await nftContract.connect(randomPerson).makeAnTestNFT();
     console.log("txn %s", txn1)

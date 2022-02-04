@@ -147,4 +147,12 @@ contract NftSwapContract is IERC721Receiver {
     function getState() public view returns (State) {
         return state;
     }
+
+    function getSellerNftAddress() public view returns (address) {
+        return sellerNftAddress;
+    }
+
+    function getSellerTokenID() public view returns (uint256) {
+        return sellerTokenID;
+    }
 }
