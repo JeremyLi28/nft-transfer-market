@@ -133,7 +133,7 @@ const App = () => {
         const signer = provider.getSigner();
         const nftContract = new ethers.Contract(nftAddress, nftContractABI, signer);
         
-        const txn = await nftContract.approve(nftAddress, tokenId, { gasLimit: 300000 });
+        const txn = await nftContract.approve(contractAddress, tokenId, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
 
         await txn.wait();
