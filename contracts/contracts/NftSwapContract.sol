@@ -39,7 +39,7 @@ contract NftSwapContract is IERC721Receiver {
         state = State.sellerNftDeposited;
     }
     
-    function sellerCancelNFT()
+    function sellerCancel()
         public
         inState(State.sellerNftDeposited)
         onlySeller
@@ -60,7 +60,7 @@ contract NftSwapContract is IERC721Receiver {
         state = State.buyerNftDeposited;
     }
     
-    function buyerCancelNFT()
+    function buyerCancel()
         public
         inState(State.buyerNftDeposited)
         onlyBuyer
@@ -68,18 +68,30 @@ contract NftSwapContract is IERC721Receiver {
         ERC721(buyerNftAddress).safeTransferFrom(address(this), msg.sender, buyerTokenID);
         state = State.buyerCanceled;
     }
+
+    function sellerDecline()
+        public
+        onlySeller
+    {
+        // return NFT to buyer
+        ERC721(buyerNftAddress).safeTransferFrom(address(this), buyerAddress, buyerTokenID);
+        delete buyerAddress;
+        delete buyerNftAddress;
+        delete buyerTokenID;
+        state = State.sellerNftDeposited;
+    }
   
-    function approve(bool _state)
+    function approve()
         public
         inState(State.buyerNftDeposited)
         BuyerOrSeller
     {
         if (msg.sender == sellerAddress){
-            sellerApprove = _state;
+            sellerApprove = true;
             console.log("seller approve: %s", sellerApprove);
         }
         else{
-            buyerApprove = _state;
+            buyerApprove = true;
             console.log("buyer approve: %s", buyerApprove);
         }
         
@@ -113,6 +125,18 @@ contract NftSwapContract is IERC721Receiver {
 	
 	modifier inState(State _state) {
 		require(state == _state);
+		_;
+	}
+
+    modifier inStates(State[] memory _states) {
+        bool contains = false;
+    
+        for (uint i=0; i < _states.length; i++) {
+            if (state == _states[i]) {
+                contains = true;
+            }
+        }
+		require(contains);
 		_;
 	}
 
