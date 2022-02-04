@@ -83,7 +83,16 @@ const App = () => {
   }, [])
 
   const renderNotConnectedContainer = () => (
-    <Button variant="contained" onClick={connectWallet}>Connect to Wallet</Button>
+    <Container maxWidth="sm">
+      <Stack
+        sx={{ pt: 4 }}
+        direction="row"
+        spacing={2}
+        justifyContent="center"
+      >
+        <Button variant="contained" onClick={connectWallet} size="large">Connect to Wallet</Button>
+      </Stack>
+    </Container>
   );
 
   const renderSellNFTUI = () => (
@@ -103,7 +112,7 @@ const App = () => {
         spacing={2}
         justifyContent="center"
       >
-        <Button variant="contained">Sell NFT</Button>
+        <Button variant="contained" size="large">Sell NFT</Button>
       </Stack>
   </Container>
   );
