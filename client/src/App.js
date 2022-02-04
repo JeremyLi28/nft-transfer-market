@@ -17,7 +17,8 @@ import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { ethers } from "ethers";
-import abi from './utils/NftSwapContract.json';
+import swap_abi from './utils/NftSwapContract.json';
+import nft_abi from './utils/MyTestNft.json';
 
 function Copyright() {
   return (
@@ -41,7 +42,8 @@ const App = () => {
   const [tokenId, setTokenId] = React.useState('');
   const [currentAccount, setCurrentAccount] = React.useState("");
   const contractAddress = "0x15532151cc1c320D9620E7352266DD2A4a6CC62d";
-  const contractABI = abi.abi;
+  const contractABI = swap_abi.abi;
+  const nftContractABI = nft_abi.abi;
     
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -116,10 +118,33 @@ const App = () => {
         spacing={2}
         justifyContent="center"
       >
+        <Button variant="contained" size="large" onClick={approveNFT}>Approve NFT</Button>
         <Button variant="contained" size="large" onClick={submitSell}>Sell NFT</Button>
       </Stack>
   </Container>
   );
+
+  const approveNFT = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftContract = new ethers.Contract(nftAddress, nftContractABI, signer);
+        
+        const txn = await nftContract.approve(nftAddress, tokenId, { gasLimit: 300000 });
+        console.log("Mining...", txn.hash);
+
+        await txn.wait();
+        console.log("Mined -- ", txn.hash);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const submitSell = async () => {
     try {
