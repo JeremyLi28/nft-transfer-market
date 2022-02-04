@@ -8,12 +8,11 @@ contract NftSwapContractFactory {
     NftSwapContract[] public nftSwapContracts;
     event NftSwapContractCreated(NftSwapContract nftSwapContract);
 
-    function createNftSwapContract() external returns (NftSwapContract){
+    function createNftSwapContract() external {
         NftSwapContract nftSwapContract = new NftSwapContract();
 
         nftSwapContracts.push(nftSwapContract);
         emit NftSwapContractCreated(nftSwapContract);
-        return nftSwapContract;
     }
 
     function getNftSwapContracts() external view returns (NftSwapContract[] memory) {
