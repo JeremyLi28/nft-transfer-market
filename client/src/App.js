@@ -14,6 +14,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
+import TextField from '@mui/material/TextField';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 function Copyright() {
@@ -33,7 +34,9 @@ const cards = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const theme = createTheme();
 
-export default function Album() {
+const App = () => {
+  const [nftAddress, setNftAddress] = React.useState('');
+  const [tokenId, setTokenId] = React.useState('');
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -73,8 +76,16 @@ export default function Album() {
               spacing={2}
               justifyContent="center"
             >
+            <TextField id="outlined-basic" label="nft address" variant="outlined" value={nftAddress} onInput={e => setNftAddress(e.target.value)}/>
+            <TextField id="outlined-basic" label="token id" variant="outlined" value={tokenId} onInput={e => setTokenId(e.target.value)}/>
+            </Stack>
+            <Stack
+              sx={{ pt: 4 }}
+              direction="row"
+              spacing={2}
+              justifyContent="center"
+            >
               <Button variant="contained">Sell NFT</Button>
-              <Button variant="outlined">Buy NFT</Button>
             </Stack>
           </Container>
         </Box>
@@ -132,3 +143,5 @@ export default function Album() {
     </ThemeProvider>
   );
 }
+
+export default App; 
