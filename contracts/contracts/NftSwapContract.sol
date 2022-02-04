@@ -66,11 +66,15 @@ contract NftSwapContract is IERC721Receiver {
         onlyBuyer
     {
         ERC721(buyerNftAddress).safeTransferFrom(address(this), msg.sender, buyerTokenID);
-        state = State.buyerCanceled;
+        delete buyerAddress;
+        delete buyerNftAddress;
+        delete buyerTokenID;
+        state = State.sellerNftDeposited;
     }
 
     function sellerDecline()
         public
+        inState(State.buyerNftDeposited)
         onlySeller
     {
         // return NFT to buyer
@@ -125,18 +129,6 @@ contract NftSwapContract is IERC721Receiver {
 	
 	modifier inState(State _state) {
 		require(state == _state);
-		_;
-	}
-
-    modifier inStates(State[] memory _states) {
-        bool contains = false;
-    
-        for (uint i=0; i < _states.length; i++) {
-            if (state == _states[i]) {
-                contains = true;
-            }
-        }
-		require(contains);
 		_;
 	}
 
