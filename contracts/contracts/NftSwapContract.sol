@@ -16,8 +16,15 @@ contract NftSwapContract is IERC721Receiver {
         uint256 buyerTokenID;
     }
 
+    struct Token {
+        address nftAddress;
+        uint256 tokenId;
+    }
+
     // Mapping from nft address to <token_id, swap> map
     mapping(address => mapping(uint256 => Swap)) public swaps;
+
+    Token[] tokens;
     
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) external override returns (bytes4) {
         return this.onERC721Received.selector;
@@ -34,6 +41,7 @@ contract NftSwapContract is IERC721Receiver {
         ERC721(_NFTAddress).safeTransferFrom(msg.sender, address(this), _TokenID);
         console.log("NFT at %s w/ ID %s has been deposited to this contract by %s", _NFTAddress, _TokenID, msg.sender);
         swaps[_NFTAddress][_TokenID] = swap;
+        tokens.push(Token(_NFTAddress, _TokenID));
     }
     
     function sellerCancel(address _NFTAddress, uint256 _TokenID)
@@ -113,5 +121,25 @@ contract NftSwapContract is IERC721Receiver {
         // clean up swaps
         delete swaps[swap.buyerNftAddress][swap.buyerTokenID];
         delete swaps[_NFTAddress][_TokenID];
+    }
+
+    function getOnSaleNfts() external view returns (Token[] memory) {
+        // get count first to create a static array
+        uint256 counter = 0;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            Token storage token = tokens[i];
+            if (swaps[token.nftAddress][token.tokenId].sellerNftAddress != address(0) && swaps[token.nftAddress][token.tokenId].buyerNftAddress == address(0)) {
+                counter++;
+            }
+        }
+        counter = 0;
+        Token[] memory onSaleTokens = new Token[](counter);
+        for (uint256 i = 0; i < tokens.length; i++) {
+            Token storage token = tokens[i];
+            if (swaps[token.nftAddress][token.tokenId].sellerNftAddress != address(0) && swaps[token.nftAddress][token.tokenId].buyerNftAddress == address(0)) {
+                onSaleTokens[counter] = token;
+            }
+        }
+        return onSaleTokens;
     }
 }
