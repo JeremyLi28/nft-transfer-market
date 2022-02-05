@@ -16,6 +16,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import Stack from '@mui/material/Stack';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Tab from '@mui/material/Tab';
+import TabContext from '@mui/lab/TabContext';
 import TabPanel from '@mui/lab/TabPanel';
 import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
@@ -30,7 +31,7 @@ function Copyright() {
   return (
     <Typography variant="body2" color="text.secondary" align="center">
       {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
+      <Link color="inherit" href="https://showcase.ethglobal.com/roadtoweb3/nft-transfer-market">
         NFT Transfer Market
       </Link>{' '}
       {new Date().getFullYear()}
@@ -50,7 +51,7 @@ const App = () => {
   const contractAddress = "0xfBbceA894e0BbA35FBB71a76933b6Ea4a6667148";
   const contractABI = swap_abi.abi;
   const nftContractABI = nft_abi.abi;
-    
+
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window;
 
@@ -85,6 +86,7 @@ const App = () => {
 
       console.log("Connected", accounts[0]);
       setCurrentAccount(accounts[0]);
+      getAllActiveSwaps();
     } catch (error) {
       console.log(error)
     }
@@ -108,27 +110,100 @@ const App = () => {
     </Container>
   );
 
-  const renderSellNFTUI = () => (
-    <Container maxWidth="sm">
-      <Stack
-        sx={{ pt: 4 }}
-        direction="row"
-        spacing={2}
-        justifyContent="center"
-      >
-      <TextField id="outlined-basic" label="nft address" variant="outlined" value={nftAddress} onInput={e => setNftAddress(e.target.value)}/>
-      <TextField id="outlined-basic" label="token id" variant="outlined" value={tokenId} onInput={e => setTokenId(e.target.value)}/>
-      </Stack>
-      <Stack
-        sx={{ pt: 4 }}
-        direction="row"
-        spacing={2}
-        justifyContent="center"
-      >
-        <Button variant="contained" size="large" onClick={approveNFT}>Approve NFT</Button>
-        <Button variant="contained" size="large" onClick={submitSell}>Sell NFT</Button>
-      </Stack>
+  const renderNFTs = (tabValue) => {
+    var swaps;
+    switch (tabValue) {
+      case "all":
+        swaps = allSwaps;
+        break;
+      case "buy":
+        swaps = allSwaps.filter((swap) => swap.buyerAddress === ethers.utils.getAddress(currentAccount));
+        break;
+      case "sell":
+        swaps = allSwaps.filter((swap) => swap.sellerAddress === ethers.utils.getAddress(currentAccount));
+    }
+    return (
+      <Grid container spacing={4}>
+        {swaps.map((swap, index) => (
+          <Grid item key={index} xs={12} sm={6} md={4}>
+            <Card
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+            >
+              <CardMedia
+                component="img"
+                sx={{
+                  // 16:9
+                  pt: '56.25%',
+                }}
+                image="https://source.unsplash.com/random"
+                alt="random"
+              />
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography gutterBottom variant="h5" component="h2">
+                  NFT Address: {swap.sellerNftAddress}
+                </Typography>
+                <Typography>
+                  NFT tokenId: {swap.sellerTokenID}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small">View</Button>
+                <Button size="small">Buy</Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    )
+  };
+
+  const renderTabContainer = () => (
+    <Container sx={{ py: 8 }} maxWidth="md">
+      <TabContext value={tabValue}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={tabValue} onChange={(e, newTabValue) => setTabValue(newTabValue)} centered>
+            <Tab icon={<HomeIcon />} label="All" value="all" />
+            <Tab icon={<ShoppingCartIcon />} label="My Buy" value="buy" />
+            <Tab icon={<SellIcon />} label="My Sell" value="sell" />
+          </Tabs>
+        </Box>
+        <TabPanel value="all">
+          {renderNFTs("all")}
+        </TabPanel>
+        <TabPanel value="buy">
+          {renderNFTs("buy")}
+        </TabPanel>
+        <TabPanel value="sell">
+          {renderNFTs("sell")}
+        </TabPanel>
+      </TabContext>
     </Container>
+  );
+
+  const renderSellNFTUI = () => (
+    <React.Fragment>
+      <Container maxWidth="sm">
+        <Stack
+          sx={{ pt: 4 }}
+          direction="row"
+          spacing={2}
+          justifyContent="center"
+        >
+        <TextField id="outlined-basic" label="nft address" variant="outlined" value={nftAddress} onInput={e => setNftAddress(e.target.value)}/>
+        <TextField id="outlined-basic" label="token id" variant="outlined" value={tokenId} onInput={e => setTokenId(e.target.value)}/>
+        </Stack>
+        <Stack
+          sx={{ pt: 4 }}
+          direction="row"
+          spacing={2}
+          justifyContent="center"
+        >
+          <Button variant="contained" size="large" onClick={approveNFT}>Approve NFT</Button>
+          <Button variant="contained" size="large" onClick={submitSell}>Sell NFT</Button>
+        </Stack>
+        </Container>
+        {renderTabContainer()}
+      </React.Fragment>
   );
 
   const approveNFT = async () => {
@@ -139,7 +214,7 @@ const App = () => {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const nftContract = new ethers.Contract(nftAddress, nftContractABI, signer);
-        
+
         const txn = await nftContract.approve(contractAddress, tokenId, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
 
@@ -183,7 +258,7 @@ const App = () => {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
-        
+
         const swaps = await nftSwapContract.getAllActiveSwaps({ gasLimit: 300000 });
         let swapsCleaned = [];
         swaps.forEach(swap => {
@@ -203,7 +278,7 @@ const App = () => {
       }
     } catch (error) {
       console.log(error)
-    }   
+    }
   }
 
   return (
@@ -218,7 +293,6 @@ const App = () => {
         </Toolbar>
       </AppBar>
       <main>
-        {/* Hero unit */}
         <Box
           sx={{
             bgcolor: 'background.paper',
@@ -242,57 +316,6 @@ const App = () => {
           </Container>
           {currentAccount === "" ? renderNotConnectedContainer() : renderSellNFTUI()}
         </Box>
-        {/* TODO: Show tabs after connecting to wallet */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={(e, newTabValue) => setTabValue(newTabValue)} centered>
-            <Tab icon={<HomeIcon />} label="All" value="all" />
-            <Tab icon={<ShoppingCartIcon />} label="My Buy" value="buy" />
-            <Tab icon={<SellIcon />} label="My Sell" value="sell" />
-          </Tabs>
-        </Box>
-        {/* <TabPanel value={value} index={0}>
-          Item One
-        </TabPanel>
-        <TabPanel value={value} index={1}>
-          Item Two
-        </TabPanel>
-        <TabPanel value={value} index={2}>
-          Item Three
-        </TabPanel> */}
-        <Container sx={{ py: 8 }} maxWidth="md">
-          {/* End hero unit */}
-          <Grid container spacing={4}>
-            {allSwaps.map((swap, index) => (
-              <Grid item key={index} xs={12} sm={6} md={4}>
-                <Card
-                  sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                >
-                  <CardMedia
-                    component="img"
-                    sx={{
-                      // 16:9
-                      pt: '56.25%',
-                    }}
-                    image="https://source.unsplash.com/random"
-                    alt="random"
-                  />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography gutterBottom variant="h5" component="h2">
-                      NFT Address: {swap.sellerNftAddress}
-                    </Typography>
-                    <Typography>
-                      NFT tokenId: {swap.sellerTokenID}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small">View</Button>
-                    <Button size="small">Buy</Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
       </main>
       {/* Footer */}
       <Box sx={{ bgcolor: 'background.paper', p: 6 }} component="footer">
@@ -314,4 +337,4 @@ const App = () => {
   );
 }
 
-export default App; 
+export default App;
