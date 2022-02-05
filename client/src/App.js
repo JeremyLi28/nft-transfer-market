@@ -39,8 +39,6 @@ function Copyright() {
   );
 }
 
-const cards = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
 const theme = createTheme();
 
 const App = () => {
@@ -94,7 +92,7 @@ const App = () => {
 
   React.useEffect(() => {
     checkIfWalletIsConnected();
-    getAllSellingNFTs();
+    getAllActiveSwaps();
   }, [])
 
   const renderNotConnectedContainer = () => (
@@ -177,7 +175,7 @@ const App = () => {
     }
   }
 
-  const getAllSellingNFTs = async () => {
+  const getAllActiveSwaps = async () => {
     try {
       const { ethereum } = window;
 
@@ -187,7 +185,19 @@ const App = () => {
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
         
         const swaps = await nftSwapContract.getAllActiveSwaps({ gasLimit: 300000 });
-        console.log("Swaps: ", swaps);
+        let swapsCleaned = [];
+        swaps.forEach(swap => {
+          swapsCleaned.push({
+            sellerAddress: swap.sellerAddress,
+            buyerAddress: swap.buyerAddress,
+            sellerNftAddress: swap.sellerNftAddress,
+            sellerTokenID: swap.sellerTokenID.toNumber(),
+            buyerNftAddress: swap.buyerNftAddress,
+            buyerTokenID: swap.buyerTokenID.toNumber(),
+          });
+        });
+        console.log("Swaps: ", swapsCleaned);
+        setAllSwaps(swapsCleaned)
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -252,8 +262,8 @@ const App = () => {
         <Container sx={{ py: 8 }} maxWidth="md">
           {/* End hero unit */}
           <Grid container spacing={4}>
-            {cards.map((card) => (
-              <Grid item key={card} xs={12} sm={6} md={4}>
+            {allSwaps.map((swap) => (
+              <Grid item key={swap} xs={12} sm={6} md={4}>
                 <Card
                   sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
                 >
@@ -268,10 +278,10 @@ const App = () => {
                   />
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Typography gutterBottom variant="h5" component="h2">
-                      NFT Name
+                      NFT Address: {swap.sellerNftAddress}
                     </Typography>
                     <Typography>
-                      Infomation about your NFT
+                      NFT tokenId: {swap.sellerTokenID}
                     </Typography>
                   </CardContent>
                   <CardActions>
