@@ -6,23 +6,18 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NftSwapContract is IERC721Receiver {
-    enum State {newSwap, sellerNftDeposited, sellerCanceled, buyerNftDeposited, completed} 
-    
-    address payable public sellerAddress;
-    address payable public buyerAddress;
-    address public sellerNftAddress;
-    uint256 public sellerTokenID;
-    address public buyerNftAddress;
-    uint256 public buyerTokenID;
-    bool buyerApprove = false;
-    bool sellerApprove = false;
-    State public state;
 
-    constructor()
-    {
-        sellerAddress = payable(msg.sender);
-        state = State.newSwap;
+    struct Swap {
+        address payable sellerAddress;
+        address payable buyerAddress;
+        address sellerNftAddress;
+        uint256 sellerTokenID;
+        address buyerNftAddress;
+        uint256 buyerTokenID;
     }
+
+    // Mapping from nft address to <token_id, swap> map
+    mapping(address => mapping(uint256 => Swap)) public swaps;
     
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) external override returns (bytes4) {
         return this.onERC721Received.selector;
@@ -30,133 +25,93 @@ contract NftSwapContract is IERC721Receiver {
     
     function sellerDepositNFT(address _NFTAddress, uint256 _TokenID)
         public
-        inState(State.newSwap)
     {
-        sellerNftAddress = _NFTAddress;
-        sellerTokenID = _TokenID;
-        ERC721(sellerNftAddress).safeTransferFrom(msg.sender, address(this), sellerTokenID);
+        require(swaps[_NFTAddress][_TokenID].sellerNftAddress == address(0));
+        Swap memory swap;
+        swap.sellerNftAddress = _NFTAddress;
+        swap.sellerTokenID = _TokenID;
+        swap.sellerAddress = payable(msg.sender);
+        ERC721(_NFTAddress).safeTransferFrom(msg.sender, address(this), _TokenID);
         console.log("NFT at %s w/ ID %s has been deposited to this contract by %s", _NFTAddress, _TokenID, msg.sender);
-        state = State.sellerNftDeposited;
+        swaps[_NFTAddress][_TokenID] = swap;
     }
     
-    function sellerCancel()
+    function sellerCancel(address _NFTAddress, uint256 _TokenID)
         public
-        inState(State.sellerNftDeposited)
-        onlySeller
     {
-        ERC721(sellerNftAddress).safeTransferFrom(address(this), msg.sender, sellerTokenID);
-        state = State.sellerCanceled;
+        require(swaps[_NFTAddress][_TokenID].sellerNftAddress == _NFTAddress);
+        require(swaps[_NFTAddress][_TokenID].sellerAddress == msg.sender);
+        Swap storage swap = swaps[_NFTAddress][_TokenID];
+        ERC721(_NFTAddress).safeTransferFrom(address(this), msg.sender, _TokenID);
+        // return buyer NFT if exsits.
+        if (swap.buyerNftAddress != address(0)) {
+            ERC721(swap.buyerNftAddress).safeTransferFrom(address(this), swap.buyerAddress, swap.buyerTokenID);
+        }
+        // clear swap
+        delete swaps[swap.buyerNftAddress][swap.buyerTokenID];
+        delete swaps[_NFTAddress][_TokenID];
     }
 
-    function buyerDepositNFT(address _NFTAddress, uint256 _TokenID)
+    function buyerDepositNFT(address sellerNftAddress, uint256 sellerTokenID, address _NFTAddress, uint256 _TokenID)
         public
-        inState(State.sellerNftDeposited)
     {
-        buyerAddress = payable(msg.sender);
-        buyerNftAddress = _NFTAddress;
-        buyerTokenID = _TokenID;
-        ERC721(buyerNftAddress).safeTransferFrom(msg.sender, address(this), buyerTokenID);
-        console.log("NFT at %s w/ ID %s has been deposited to this contract by %s", _NFTAddress, buyerTokenID, msg.sender);
-        state = State.buyerNftDeposited;
+        Swap storage swap = swaps[sellerNftAddress][sellerTokenID];
+        require(swap.sellerNftAddress == sellerNftAddress);
+        require(swaps[_NFTAddress][_TokenID].buyerNftAddress == address(0));
+        swap.buyerAddress = payable(msg.sender);
+        swap.buyerNftAddress = _NFTAddress;
+        swap.buyerTokenID = _TokenID;
+
+        swaps[_NFTAddress][_TokenID] = swap;
+        ERC721(_NFTAddress).safeTransferFrom(msg.sender, address(this), _TokenID);
+        console.log("NFT at %s w/ ID %s has been deposited to this contract by %s", _NFTAddress, _TokenID, msg.sender);
     }
     
-    function buyerCancel()
+    function buyerCancel(address _NFTAddress, uint256 _TokenID)
         public
-        inState(State.buyerNftDeposited)
-        onlyBuyer
     {
-        ERC721(buyerNftAddress).safeTransferFrom(address(this), msg.sender, buyerTokenID);
-        delete buyerAddress;
-        delete buyerNftAddress;
-        delete buyerTokenID;
-        delete sellerApprove;
-        delete buyerApprove;
-        state = State.sellerNftDeposited;
+        Swap storage swap = swaps[_NFTAddress][_TokenID];
+        require(swap.buyerNftAddress == _NFTAddress);
+        require(swap.buyerAddress == msg.sender);
+        
+        ERC721(_NFTAddress).safeTransferFrom(address(this), msg.sender, _TokenID);
+        // return seller NFT if exsits.
+        if (swap.sellerAddress != address(0)) {
+            ERC721(swap.sellerNftAddress).safeTransferFrom(address(this), swap.sellerAddress, swap.sellerTokenID);
+        }
+        // clear swap
+        delete swaps[swap.sellerNftAddress][swap.sellerTokenID];
+        delete swaps[_NFTAddress][_TokenID];
     }
 
-    function sellerDecline()
+    function sellerDecline(address _NFTAddress, uint256 _TokenID)
         public
-        inState(State.buyerNftDeposited)
-        onlySeller
     {
+        require(swaps[_NFTAddress][_TokenID].sellerNftAddress == _NFTAddress);
+        require(swaps[_NFTAddress][_TokenID].sellerAddress == msg.sender);
+        Swap storage swap = swaps[_NFTAddress][_TokenID];
         // return NFT to buyer
-        ERC721(buyerNftAddress).safeTransferFrom(address(this), buyerAddress, buyerTokenID);
-        delete buyerAddress;
-        delete buyerNftAddress;
-        delete buyerTokenID;
-        delete sellerApprove;
-        delete buyerApprove;
-        state = State.sellerNftDeposited;
+        ERC721(swap.buyerNftAddress).safeTransferFrom(address(this), swap.buyerAddress, swap.buyerTokenID);
+        // clean up buyer fields.
+        delete swaps[swap.buyerNftAddress][swap.buyerTokenID];
+        delete swap.buyerAddress;
+        delete swap.buyerNftAddress;
+        delete swap.buyerTokenID;
     }
   
-    function approve()
+    function sellerApprove(address _NFTAddress, uint256 _TokenID)
         public
-        inState(State.buyerNftDeposited)
-        BuyerOrSeller
     {
-        if (msg.sender == sellerAddress){
-            sellerApprove = true;
-            console.log("seller approve: %s", sellerApprove);
-        }
-        else{
-            buyerApprove = true;
-            console.log("buyer approve: %s", buyerApprove);
-        }
+        Swap storage swap = swaps[_NFTAddress][_TokenID];
+        require(swap.sellerNftAddress == _NFTAddress);
+        require(swap.sellerAddress == msg.sender);
+        require(swap.buyerNftAddress != address(0));
         
-        if (sellerApprove == true && buyerApprove == true){
-            console.log("both signed, exchanging NFT");
-            ERC721(sellerNftAddress).safeTransferFrom(address(this), buyerAddress, sellerTokenID);
-            ERC721(buyerNftAddress).safeTransferFrom(address(this), sellerAddress, buyerTokenID);
-            state = State.completed;     
-        }
-    }
-
-    function isOnSale() public view returns (bool) {
-        return (state == State.sellerNftDeposited);
-    }
-
-	modifier onlySeller() {
-		require(msg.sender == sellerAddress);
-		_;
-	}
-
-	modifier onlyBuyer() {
-        require(msg.sender == buyerAddress);
-		_;
-	}
-	
-	modifier approved(){
-	    require(buyerApprove == true && sellerApprove == true);
-	    _;
-	}
-	
-	modifier BuyerOrSeller() {
-		require(msg.sender == buyerAddress || msg.sender == sellerAddress);
-		_;
-	}
-	
-	modifier inState(State _state) {
-		require(state == _state);
-		_;
-	}
-
-    function getBalance()
-        public
-        view
-        returns (uint256 balance)
-    {
-        return address(this).balance;
-    }
-
-    function getState() public view returns (State) {
-        return state;
-    }
-
-    function getSellerNftAddress() public view returns (address) {
-        return sellerNftAddress;
-    }
-
-    function getSellerTokenID() public view returns (uint256) {
-        return sellerTokenID;
+        console.log("approved, swap NFT");
+        ERC721(swap.sellerNftAddress).safeTransferFrom(address(this), swap.buyerAddress, swap.sellerTokenID);
+        ERC721(swap.buyerNftAddress).safeTransferFrom(address(this), swap.sellerAddress, swap.buyerTokenID);
+        // clean up swaps
+        delete swaps[swap.buyerNftAddress][swap.buyerTokenID];
+        delete swaps[_NFTAddress][_TokenID];
     }
 }
