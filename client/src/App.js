@@ -262,8 +262,8 @@ const App = () => {
         <Container sx={{ py: 8 }} maxWidth="md">
           {/* End hero unit */}
           <Grid container spacing={4}>
-            {allSwaps.map((swap) => (
-              <Grid item key={swap} xs={12} sm={6} md={4}>
+            {allSwaps.map((swap, index) => (
+              <Grid item key={index} xs={12} sm={6} md={4}>
                 <Card
                   sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
                 >
