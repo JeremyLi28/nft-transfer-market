@@ -1,8 +1,8 @@
 const main = async () => {
-    const nftSwapContractFactoryFactory = await hre.ethers.getContractFactory('NftSwapContractFactory');
-    const nftSwapContractFactory = await nftSwapContractFactoryFactory.deploy();
-    await nftSwapContractFactory.deployed();
-    console.log("Contract deployed to:", nftSwapContractFactory.address);
+    const nftSwapContractFactory = await hre.ethers.getContractFactory('NftSwapContract');
+    const nftSwapContract = await nftSwapContractFactory.deploy();
+    await nftSwapContract.deployed();
+    console.log("Contract deployed to:", nftSwapContract.address);
   };
   
   const runMain = async () => {

@@ -34,9 +34,9 @@ const main = async () => {
     await txn.wait()
     console.log("seller deposited NFT");
 
-    console.log("============ Get onsale nfts ==============")
-    nfts = await nftSwapContract.getOnSaleNfts()
-    console.log("get onsale NFTs: ", nfts);
+    console.log("============ Get all active swaps ==============")
+    swaps = await nftSwapContract.getAllActiveSwaps()
+    console.log("get all active swaps: ", swaps);
     
     console.log("============ Buyer mint nft ==============")
     txn = await nftContract.connect(randomPerson).makeAnTestNFT();
@@ -53,14 +53,18 @@ const main = async () => {
     await txn.wait()
     console.log("buyer deposited NFT");
 
-    console.log("============ Get onsale nfts ==============")
-    nfts = await nftSwapContract.getOnSaleNfts()
-    console.log("get onsale NFTs: ", nfts);
+    console.log("============ Get all active swaps ==============")
+    swaps = await nftSwapContract.getAllActiveSwaps()
+    console.log("get all active swaps: ", swaps);
 
     console.log("============ Seller approve swap ==============")
     txn = await nftSwapContract.sellerApprove(nftContract.address, 0)
     await txn.wait()
     console.log("seller approved swap!");
+
+    console.log("============ Get all active swaps ==============")
+    swaps = await nftSwapContract.getAllActiveSwaps()
+    console.log("get all active swaps: ", swaps);
   };
   
   const runMain = async () => {
