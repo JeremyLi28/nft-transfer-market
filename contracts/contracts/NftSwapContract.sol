@@ -123,7 +123,7 @@ contract NftSwapContract is IERC721Receiver {
         delete swaps[_NFTAddress][_TokenID];
     }
 
-    function getOnSaleNfts() external view returns (Token[] memory) {
+    function getOnSaleNfts() external view returns (Swap[] memory) {
         // get count first to create a static array
         uint256 counter = 0;
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -132,14 +132,15 @@ contract NftSwapContract is IERC721Receiver {
                 counter++;
             }
         }
+        Swap[] memory onSaleNfts = new Swap[](counter);
         counter = 0;
-        Token[] memory onSaleTokens = new Token[](counter);
         for (uint256 i = 0; i < tokens.length; i++) {
             Token storage token = tokens[i];
             if (swaps[token.nftAddress][token.tokenId].sellerNftAddress != address(0) && swaps[token.nftAddress][token.tokenId].buyerNftAddress == address(0)) {
-                onSaleTokens[counter] = token;
+                onSaleNfts[counter] = swaps[token.nftAddress][token.tokenId];
+                counter++;
             }
         }
-        return onSaleTokens;
+        return onSaleNfts;
     }
 }

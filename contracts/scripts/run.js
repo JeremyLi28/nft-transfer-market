@@ -33,10 +33,14 @@ const main = async () => {
     txn = await nftSwapContract.sellerDepositNFT(nftContract.address, 0)
     await txn.wait()
     console.log("seller deposited NFT");
+
+    console.log("============ Get onsale nfts ==============")
+    nfts = await nftSwapContract.getOnSaleNfts()
+    console.log("get onsale NFTs: ", nfts);
     
     console.log("============ Buyer mint nft ==============")
-    let txn1 = await nftContract.connect(randomPerson).makeAnTestNFT();
-    console.log("txn %s", txn1)
+    txn = await nftContract.connect(randomPerson).makeAnTestNFT();
+    console.log("txn %s", txn)
 
     // buyer approve NFT transfer to escrow
     console.log("============ Buyer approve nft ==============")
@@ -48,6 +52,10 @@ const main = async () => {
     txn = await nftSwapContract.connect(randomPerson).buyerDepositNFT(nftContract.address, 0, nftContract.address, 1)
     await txn.wait()
     console.log("buyer deposited NFT");
+
+    console.log("============ Get onsale nfts ==============")
+    nfts = await nftSwapContract.getOnSaleNfts()
+    console.log("get onsale NFTs: ", nfts);
 
     console.log("============ Seller approve swap ==============")
     txn = await nftSwapContract.sellerApprove(nftContract.address, 0)
