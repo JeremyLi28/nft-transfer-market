@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NftSwapContract is IERC721Receiver {
-    enum State {newSwap, sellerNftDeposited, sellerCanceled, buyerNftDeposited, completed}
+    enum State {newSwap, sellerNftDeposited, sellerCanceled, buyerNftDeposited, completed} 
     
     address payable public sellerAddress;
     address payable public buyerAddress;
     address public sellerNftAddress;
-    uint256 sellerTokenID;
+    uint256 public sellerTokenID;
     address public buyerNftAddress;
-    uint256 buyerTokenID;
+    uint256 public buyerTokenID;
     bool buyerApprove = false;
     bool sellerApprove = false;
     State public state;
@@ -109,6 +109,10 @@ contract NftSwapContract is IERC721Receiver {
             ERC721(buyerNftAddress).safeTransferFrom(address(this), sellerAddress, buyerTokenID);
             state = State.completed;     
         }
+    }
+
+    function isOnSale() public view returns (bool) {
+        return (state == State.sellerNftDeposited);
     }
 
 	modifier onlySeller() {
