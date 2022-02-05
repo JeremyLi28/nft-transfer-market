@@ -1,24 +1,30 @@
 import * as React from 'react';
 import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import CameraIcon from '@mui/icons-material/PhotoCamera';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
+import Container from '@mui/material/Container';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
+import HomeIcon from '@mui/icons-material/Home';
+import Link from '@mui/material/Link';
+import SellIcon from '@mui/icons-material/Sell';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import Tab from '@mui/material/Tab';
+import TabPanel from '@mui/lab/TabPanel';
+import Tabs from '@mui/material/Tabs';
+import TextField from '@mui/material/TextField';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import Link from '@mui/material/Link';
-import TextField from '@mui/material/TextField';
+import nft_abi from './utils/MyTestNft.json';
+import swap_abi from './utils/NftSwapContract.json';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { ethers } from "ethers";
-import swap_abi from './utils/NftSwapContract.json';
-import nft_abi from './utils/MyTestNft.json';
 import factory_abi from './utils/NftSwapContractFactory.json';
 
 function Copyright() {
@@ -43,6 +49,7 @@ const App = () => {
   const [tokenId, setTokenId] = React.useState('');
   const [allSwaps, setAllSwaps] = React.useState([]);
   const [currentAccount, setCurrentAccount] = React.useState("");
+  const [tabValue, setTabValue] = React.useState("all");
   const contractAddress = "0x17923483ce5d75D8a6A153eF8A0ebAc42D19f633";
   const contractABI = factory_abi.abi;
   const swapContractABI = swap_abi.abi;
@@ -125,7 +132,7 @@ const App = () => {
         <Button variant="contained" size="large" onClick={approveNFT}>Approve NFT</Button>
         <Button variant="contained" size="large" onClick={submitSell}>Sell NFT</Button>
       </Stack>
-  </Container>
+    </Container>
   );
 
   const approveNFT = async () => {
@@ -204,7 +211,7 @@ const App = () => {
       <CssBaseline />
       <AppBar position="relative">
         <Toolbar>
-          <CameraIcon sx={{ mr: 2 }} />
+          <StorefrontIcon sx={{ mr: 2 }} />
           <Typography variant="h6" color="inherit" noWrap>
             NFT Transfer Market
           </Typography>
@@ -220,7 +227,7 @@ const App = () => {
           }}
         >
           <Container maxWidth="sm">
-            <Typography
+            <Typography style={{ fontWeight: 600 }}
               component="h1"
               variant="h2"
               align="center"
@@ -230,11 +237,28 @@ const App = () => {
               NFT Transfer Market
             </Typography>
             <Typography variant="h5" align="center" color="text.secondary" paragraph>
-              In NFT Transfer Market, you can swap your NFT with anyone else in the world!
+              Swap your NFT with anyone else in the world!
             </Typography>
           </Container>
           {currentAccount === "" ? renderNotConnectedContainer() : renderSellNFTUI()}
         </Box>
+        {/* TODO: Show tabs after connecting to wallet */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={tabValue} onChange={(e, newTabValue) => setTabValue(newTabValue)} centered>
+            <Tab icon={<HomeIcon />} label="All" value="all" />
+            <Tab icon={<ShoppingCartIcon />} label="My Buy" value="buy" />
+            <Tab icon={<SellIcon />} label="My Sell" value="sell" />
+          </Tabs>
+        </Box>
+        {/* <TabPanel value={value} index={0}>
+          Item One
+        </TabPanel>
+        <TabPanel value={value} index={1}>
+          Item Two
+        </TabPanel>
+        <TabPanel value={value} index={2}>
+          Item Three
+        </TabPanel> */}
         <Container sx={{ py: 8 }} maxWidth="md">
           {/* End hero unit */}
           <Grid container spacing={4}>
@@ -261,6 +285,7 @@ const App = () => {
                     </Typography>
                   </CardContent>
                   <CardActions>
+                    <Button size="small">View</Button>
                     <Button size="small">Buy</Button>
                   </CardActions>
                 </Card>
@@ -280,7 +305,7 @@ const App = () => {
           color="text.secondary"
           component="p"
         >
-          Build by 2 happy web2 engineer :-)
+          Built by 2 happy web2 engineer :-)
         </Typography>
         <Copyright />
       </Box>
