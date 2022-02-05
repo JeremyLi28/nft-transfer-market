@@ -19,6 +19,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { ethers } from "ethers";
 import swap_abi from './utils/NftSwapContract.json';
 import nft_abi from './utils/MyTestNft.json';
+import factory_abi from './utils/NftSwapContractFactory.json';
 
 function Copyright() {
   return (
@@ -40,9 +41,11 @@ const theme = createTheme();
 const App = () => {
   const [nftAddress, setNftAddress] = React.useState('');
   const [tokenId, setTokenId] = React.useState('');
+  const [allSwaps, setAllSwaps] = React.useState([]);
   const [currentAccount, setCurrentAccount] = React.useState("");
-  const contractAddress = "0x15532151cc1c320D9620E7352266DD2A4a6CC62d";
-  const contractABI = swap_abi.abi;
+  const contractAddress = "0x17923483ce5d75D8a6A153eF8A0ebAc42D19f633";
+  const contractABI = factory_abi.abi;
+  const swapContractABI = swap_abi.abi;
   const nftContractABI = nft_abi.abi;
     
   const checkIfWalletIsConnected = async () => {
@@ -86,6 +89,7 @@ const App = () => {
 
   React.useEffect(() => {
     checkIfWalletIsConnected();
+    getAllSellingNFTs();
   }, [])
 
   const renderNotConnectedContainer = () => (
@@ -153,9 +157,17 @@ const App = () => {
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
-        
-        const txn = await nftSwapContract.sellerDepositNFT(nftAddress, tokenId, { gasLimit: 300000 });
+
+        const nftSwapContractFactory = new ethers.Contract(contractAddress, contractABI, signer);
+        let txn = await nftSwapContractFactory.createNftSwapContract();
+        await txn.wait()
+
+        const nftSwapContracts = await nftSwapContractFactory.getNftSwapContracts();
+        console.log("nftSwapContract[0] :", nftSwapContracts[0]);
+
+        const nftSwapContract = new ethers.Contract(nftSwapContracts[0], swapContractABI, signer);
+        console.log("nftSwapContract address:", nftSwapContract.address);
+        txn = await nftSwapContract.sellerDepositNFT(nftAddress, tokenId, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -166,6 +178,25 @@ const App = () => {
     } catch (error) {
       console.log(error)
     }
+  }
+
+  const getAllSellingNFTs = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContractFactory = new ethers.Contract(contractAddress, contractABI, signer);
+        
+        const swaps = await nftSwapContractFactory.getNftSwapContracts({ gasLimit: 300000 });
+        console.log("Swaps: ", swaps);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }   
   }
 
   return (
@@ -230,7 +261,6 @@ const App = () => {
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small">View</Button>
                     <Button size="small">Buy</Button>
                   </CardActions>
                 </Card>
