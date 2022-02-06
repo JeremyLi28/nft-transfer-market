@@ -202,19 +202,15 @@ const App = () => {
             >
               <CardMedia
                 component="img"
-                sx={{
-                  // 16:9
-                  pt: '56.25%',
-                }}
-                image="https://source.unsplash.com/random"
+                image={swap.sellerNftImage}
                 alt="random"
               />
               <CardContent sx={{ flexGrow: 1 }}>
                 <Typography gutterBottom variant="h5" component="h2">
-                  NFT Address: {swap.sellerNftAddress}
+                  {swap.sellerNftName}
                 </Typography>
                 <Typography>
-                  NFT tokenId: {swap.sellerTokenID}
+                  {swap.sellerNftDescription}
                 </Typography>
               </CardContent>
               <CardActions>
@@ -527,18 +523,31 @@ const App = () => {
 
         const swaps = await nftSwapContract.getAllActiveSwaps({ gasLimit: 300000 });
         let swapsCleaned = [];
-        swaps.forEach(swap => {
-          swapsCleaned.push({
-            sellerAddress: swap.sellerAddress,
-            buyerAddress: swap.buyerAddress,
-            sellerNftAddress: swap.sellerNftAddress,
-            sellerTokenID: swap.sellerTokenID.toNumber(),
-            buyerNftAddress: swap.buyerNftAddress,
-            buyerTokenID: swap.buyerTokenID.toNumber(),
-          });
-        });
+
+        var nftContract
+        for (let swap of swaps) {
+          nftContract = new ethers.Contract(swap.sellerNftAddress, nftContractABI, signer);
+          let uri = await nftContract.tokenURI(swap.sellerTokenID, { gasLimit: 300000 })
+          fetch(uri)
+          .then((response) => response.json())
+          .then((responseJson) => {
+            swapsCleaned.push({
+              sellerAddress: swap.sellerAddress,
+              buyerAddress: swap.buyerAddress,
+              sellerNftAddress: swap.sellerNftAddress,
+              sellerTokenID: swap.sellerTokenID.toNumber(),
+              buyerNftAddress: swap.buyerNftAddress,
+              buyerTokenID: swap.buyerTokenID.toNumber(),
+              sellerNftName: responseJson.name,
+              sellerNftDescription: responseJson.description,
+              sellerNftImage: responseJson.image
+            });
+            if (swapsCleaned.length == swaps.length) {
+              setAllSwaps(swapsCleaned)
+            }
+          })        
+        }
         console.log("Swaps: ", swapsCleaned);
-        setAllSwaps(swapsCleaned)
       } else {
         console.log("Ethereum object doesn't exist!");
       }
