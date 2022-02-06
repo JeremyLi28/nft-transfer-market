@@ -53,7 +53,7 @@ const App = () => {
   const [allSwaps, setAllSwaps] = React.useState([]);
   const [currentAccount, setCurrentAccount] = React.useState("");
   const [tabValue, setTabValue] = React.useState("all");
-  const [openDialog, setOpenDialog] = React.useState(false);
+  const [openBuyDialog, setOpenBuyDialog] = React.useState(false);
   const [selectedNFTAddress, setSelectedNFTAddress] = React.useState('');
   const [selectedTokenID, setSelectedTokenID] = React.useState('');
   const contractAddress = "0xfBbceA894e0BbA35FBB71a76933b6Ea4a6667148";
@@ -122,7 +122,7 @@ const App = () => {
     var swaps;
     switch (tabValue) {
       case "all":
-        swaps = allSwaps;
+        swaps = allSwaps.filter((swap) => swap.sellerAddress != ethers.utils.getAddress("0x0000000000000000000000000000000000000000") && swap.buyerAddress === ethers.utils.getAddress("0x0000000000000000000000000000000000000000"));
         break;
       case "buy":
         swaps = allSwaps.filter((swap) => swap.buyerAddress === ethers.utils.getAddress(currentAccount));
@@ -156,7 +156,7 @@ const App = () => {
               </CardContent>
               <CardActions>
                 <Button size="small">View</Button>
-                <Button size="small" address={swap.sellerNftAddress} tokenid={swap.sellerTokenID} onClick={(e) => handleClickOpenDialog(e)}>Buy</Button>
+                <Button size="small" address={swap.sellerNftAddress} tokenid={swap.sellerTokenID} onClick={(e) => handleClickOpenBuyDialog(e)}>Buy</Button>
               </CardActions>
             </Card>
           </Grid>
@@ -214,21 +214,21 @@ const App = () => {
       </React.Fragment>
   );
 
-  const handleClickOpenDialog = async (e) => {
+  const handleClickOpenBuyDialog = async (e) => {
     setSelectedNFTAddress(e.currentTarget.getAttribute("address"));
     setSelectedTokenID(e.currentTarget.getAttribute("tokenid"));
-    setOpenDialog(true);
+    setOpenBuyDialog(true);
   };
 
-  const handleCloseDialog = () => {
+  const handleCloseBuyDialog = () => {
     setSelectedNFTAddress('');
     setSelectedTokenID('');
-    setOpenDialog(false);
+    setOpenBuyDialog(false);
   };
 
 
-  const renderDialog = () => (
-    <Dialog open={openDialog} onClose={handleCloseDialog}>
+  const renderBuyDialog = () => (
+    <Dialog open={openBuyDialog} onClose={handleCloseBuyDialog}>
       <DialogTitle>Buy NFT</DialogTitle>
       <DialogContent>
         <DialogContentText>
@@ -240,7 +240,7 @@ const App = () => {
       <DialogActions>
         <Button onClick={approveNFT}>Approve</Button>
         <Button onClick={submitBuy}>Buy</Button>
-        <Button onClick={handleCloseDialog}>Close</Button>
+        <Button onClick={handleCloseBuyDialog}>Close</Button>
       </DialogActions>
     </Dialog>
   );
@@ -376,7 +376,7 @@ const App = () => {
             </Typography>
           </Container>
           {currentAccount === "" ? renderNotConnectedContainer() : renderMainUI()}
-          {renderDialog()}
+          {renderBuyDialog()}
         </Box>
       </main>
       {/* Footer */}
