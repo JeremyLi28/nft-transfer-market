@@ -65,6 +65,44 @@ const main = async () => {
     console.log("============ Get all active swaps ==============")
     swaps = await nftSwapContract.getAllActiveSwaps()
     console.log("get all active swaps: ", swaps);
+
+
+    console.log("============ Seller mint another nft ==============")
+    // TODO: how to get token ID?
+    txn = await nftContract.makeAnTestNFT();
+    // Wait for it to be mined.
+    await txn.wait()
+    tokenId = txn.value
+    console.log("txn %s", txn)
+
+    console.log("============ Sell approve nft again ==============")
+    txn = await nftContract.approve(nftSwapContract.address, 2)
+    await txn.wait()
+    console.log("seller approved NFT transfer");
+
+    // deposit nft to nftSwapContract
+    console.log("============ Sell deposit nft again ==============")
+    txn = await nftSwapContract.sellerDepositNFT(nftContract.address, 2)
+    await txn.wait()
+    console.log("seller deposited NFT");
+
+    console.log("============ Get all active swaps ==============")
+    swaps = await nftSwapContract.getAllActiveSwaps()
+    console.log("get all active swaps: ", swaps);
+
+    console.log("============ Buyer approve nft again ==============")
+    tnx = await nftContract.connect(randomPerson).approve(nftSwapContract.address, 0)
+    await txn.wait()
+    console.log("buyer approved NFT transfer");
+
+    console.log("============ Buyer deposit nft again ==============")
+    txn = await nftSwapContract.connect(randomPerson).buyerDepositNFT(nftContract.address, 2, nftContract.address, 0)
+    await txn.wait()
+    console.log("buyer deposited NFT");
+
+    console.log("============ Get all active swaps ==============")
+    swaps = await nftSwapContract.getAllActiveSwaps()
+    console.log("get all active swaps: ", swaps);
   };
   
   const runMain = async () => {

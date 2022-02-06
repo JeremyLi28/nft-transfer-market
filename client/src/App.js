@@ -57,7 +57,7 @@ const App = () => {
   const [openSellerDialog, setOpenSellerDialog] = React.useState(false);
   const [openBuyerDialog, setOpenBuyerDialog] = React.useState(false);
   const [selectedSwap, setSelectedSwap] = React.useState({});
-  const contractAddress = "0xfBbceA894e0BbA35FBB71a76933b6Ea4a6667148";
+  const contractAddress = "0x55728f498d66498F8ca0313475a8C2a09B4489dd";
   const contractABI = swap_abi.abi;
   const nftContractABI = nft_abi.abi;
 
@@ -77,6 +77,7 @@ const App = () => {
         const account = accounts[0];
         console.log("Found an authorized account:", account);
         setCurrentAccount(account)
+        setupEventListener() 
     } else {
         console.log("No authorized account found")
     }
@@ -96,6 +97,62 @@ const App = () => {
       console.log("Connected", accounts[0]);
       setCurrentAccount(accounts[0]);
       getAllActiveSwaps();
+      setupEventListener() 
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const setupEventListener = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        nftSwapContract.on("sellerDepositEvent", (nftAddress, tokenId) => {
+          console.log(nftAddress, tokenId.toNumber())
+          getAllActiveSwaps();
+          // alert(`You just listed your NFT: ${contractAddress}/${tokenId.toNumber()}`)
+        });
+
+        nftSwapContract.on("sellerCancelEvent", (nftAddress, tokenId) => {
+          console.log(nftAddress, tokenId.toNumber())
+          getAllActiveSwaps();
+          // alert(`You just canceled your NFT sale: ${contractAddress}/${tokenId.toNumber()}`)
+        });
+
+        nftSwapContract.on("buyerDepositEvent", (nftAddress, tokenId) => {
+          console.log(nftAddress, tokenId.toNumber())
+          getAllActiveSwaps();
+          // alert(`You just bought with your NFT: ${contractAddress}/${tokenId.toNumber()}`)
+        });
+
+        nftSwapContract.on("buyerCancelEvent", (nftAddress, tokenId) => {
+          console.log(nftAddress, tokenId.toNumber())
+          getAllActiveSwaps();
+          // alert(`You just cancelled your NFT buy: ${contractAddress}/${tokenId.toNumber()}`)
+        });
+
+        nftSwapContract.on("sellerApproveEvent", (nftAddress, tokenId) => {
+          console.log(nftAddress, tokenId.toNumber())
+          getAllActiveSwaps();
+          // alert(`You just approved your NFT sale: ${contractAddress}/${tokenId.toNumber()}`)
+        });
+
+        nftSwapContract.on("sellerDeclineEvent", (nftAddress, tokenId) => {
+          console.log(nftAddress, tokenId.toNumber())
+          getAllActiveSwaps();
+          // alert(`You just decline your NFT sale: ${contractAddress}/${tokenId.toNumber()}`)
+        });
+
+        console.log("Setup event listener!")
+
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
     } catch (error) {
       console.log(error)
     }
@@ -175,7 +232,7 @@ const App = () => {
       <TabContext value={tabValue}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={(e, newTabValue) => setTabValue(newTabValue)} centered>
-            <Tab icon={<HomeIcon />} label="All" value="all" />
+            <Tab icon={<StorefrontIcon />} label="Shop" value="all" />
             <Tab icon={<ShoppingCartIcon />} label="My Buy" value="buy" />
             <Tab icon={<SellIcon />} label="My Sell" value="sell" />
           </Tabs>
@@ -399,7 +456,7 @@ const App = () => {
         const signer = provider.getSigner();
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        let txn = await nftSwapContract.sellerCancel(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        let txn = await nftSwapContract.sellerCancel(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
 
         await txn.wait();

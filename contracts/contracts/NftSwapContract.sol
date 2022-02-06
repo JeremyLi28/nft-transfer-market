@@ -25,6 +25,14 @@ contract NftSwapContract is IERC721Receiver {
     mapping(address => mapping(uint256 => Swap)) public swaps;
 
     Token[] tokens;
+
+    event sellerDepositEvent(address nftAddress, uint256 tokenId);
+    event buyerDepositEvent(address nftAddress, uint256 tokenId);
+    event sellerCancelEvent(address nftAddress, uint256 tokenId);
+    event buyerCancelEvent(address nftAddress, uint256 tokenId);
+    event sellerApproveEvent(address nftAddress, uint256 tokenId);
+    event sellerDeclineEvent(address nftAddress, uint256 tokenId);
+
     
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) external override returns (bytes4) {
         return this.onERC721Received.selector;
@@ -42,6 +50,8 @@ contract NftSwapContract is IERC721Receiver {
         console.log("NFT at %s w/ ID %s has been deposited to this contract by %s", _NFTAddress, _TokenID, msg.sender);
         swaps[_NFTAddress][_TokenID] = swap;
         tokens.push(Token(_NFTAddress, _TokenID));
+
+        emit sellerDepositEvent(_NFTAddress, _TokenID);
     }
     
     function sellerCancel(address _NFTAddress, uint256 _TokenID)
@@ -58,6 +68,8 @@ contract NftSwapContract is IERC721Receiver {
         // clear swap
         delete swaps[swap.buyerNftAddress][swap.buyerTokenID];
         delete swaps[_NFTAddress][_TokenID];
+
+        emit sellerCancelEvent(_NFTAddress, _TokenID);
     }
 
     function buyerDepositNFT(address sellerNftAddress, uint256 sellerTokenID, address _NFTAddress, uint256 _TokenID)
@@ -73,6 +85,8 @@ contract NftSwapContract is IERC721Receiver {
         swaps[_NFTAddress][_TokenID] = swap;
         ERC721(_NFTAddress).safeTransferFrom(msg.sender, address(this), _TokenID);
         console.log("NFT at %s w/ ID %s has been deposited to this contract by %s", _NFTAddress, _TokenID, msg.sender);
+
+        emit buyerDepositEvent(_NFTAddress, _TokenID);
     }
     
     function buyerCancel(address _NFTAddress, uint256 _TokenID)
@@ -90,6 +104,8 @@ contract NftSwapContract is IERC721Receiver {
         // clear swap
         delete swaps[swap.sellerNftAddress][swap.sellerTokenID];
         delete swaps[_NFTAddress][_TokenID];
+
+        emit buyerCancelEvent(_NFTAddress, _TokenID);
     }
 
     function sellerDecline(address _NFTAddress, uint256 _TokenID)
@@ -105,6 +121,8 @@ contract NftSwapContract is IERC721Receiver {
         delete swap.buyerAddress;
         delete swap.buyerNftAddress;
         delete swap.buyerTokenID;
+
+        emit sellerDeclineEvent(_NFTAddress, _TokenID);
     }
   
     function sellerApprove(address _NFTAddress, uint256 _TokenID)
@@ -121,6 +139,8 @@ contract NftSwapContract is IERC721Receiver {
         // clean up swaps
         delete swaps[swap.buyerNftAddress][swap.buyerTokenID];
         delete swaps[_NFTAddress][_TokenID];
+
+        emit sellerApproveEvent(_NFTAddress, _TokenID);
     }
 
     function getAllActiveSwaps() external view returns (Swap[] memory) {
