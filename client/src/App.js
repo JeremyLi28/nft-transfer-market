@@ -8,6 +8,11 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Container from '@mui/material/Container';
 import CssBaseline from '@mui/material/CssBaseline';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 import Grid from '@mui/material/Grid';
 import HomeIcon from '@mui/icons-material/Home';
 import Link from '@mui/material/Link';
@@ -48,6 +53,9 @@ const App = () => {
   const [allSwaps, setAllSwaps] = React.useState([]);
   const [currentAccount, setCurrentAccount] = React.useState("");
   const [tabValue, setTabValue] = React.useState("all");
+  const [openDialog, setOpenDialog] = React.useState(false);
+  const [selectedNFTAddress, setSelectedNFTAddress] = React.useState('');
+  const [selectedTokenID, setSelectedTokenID] = React.useState('');
   const contractAddress = "0xfBbceA894e0BbA35FBB71a76933b6Ea4a6667148";
   const contractABI = swap_abi.abi;
   const nftContractABI = nft_abi.abi;
@@ -148,7 +156,7 @@ const App = () => {
               </CardContent>
               <CardActions>
                 <Button size="small">View</Button>
-                <Button size="small">Buy</Button>
+                <Button size="small" address={swap.sellerNftAddress} tokenid={swap.sellerTokenID} onClick={(e) => handleClickOpenDialog(e)}>Buy</Button>
               </CardActions>
             </Card>
           </Grid>
@@ -180,7 +188,7 @@ const App = () => {
     </Container>
   );
 
-  const renderSellNFTUI = () => (
+  const renderMainUI = () => (
     <React.Fragment>
       <Container maxWidth="sm">
         <Stack
@@ -204,6 +212,37 @@ const App = () => {
         </Container>
         {renderTabContainer()}
       </React.Fragment>
+  );
+
+  const handleClickOpenDialog = async (e) => {
+    setSelectedNFTAddress(e.currentTarget.getAttribute("address"));
+    setSelectedTokenID(e.currentTarget.getAttribute("tokenid"));
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedNFTAddress('');
+    setSelectedTokenID('');
+    setOpenDialog(false);
+  };
+
+
+  const renderDialog = () => (
+    <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <DialogTitle>Buy NFT</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Input your NFT to buy
+        </DialogContentText>
+        <TextField margin="normal" fullWidth label="nft address" variant="outlined" value={nftAddress} onInput={e => setNftAddress(e.target.value)}/>
+        <TextField margin="normal" fullWidth label="token id" variant="outlined" value={tokenId} onInput={e => setTokenId(e.target.value)}/>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={approveNFT}>Approve</Button>
+        <Button onClick={submitBuy}>Buy</Button>
+        <Button onClick={handleCloseDialog}>Close</Button>
+      </DialogActions>
+    </Dialog>
   );
 
   const approveNFT = async () => {
@@ -238,6 +277,28 @@ const App = () => {
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let txn = await nftSwapContract.sellerDepositNFT(nftAddress, tokenId, { gasLimit: 300000 });
+        console.log("Mining...", txn.hash);
+
+        await txn.wait();
+        console.log("Mined -- ", txn.hash);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const submitBuy = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -314,7 +375,8 @@ const App = () => {
               Swap your NFT with anyone else in the world!
             </Typography>
           </Container>
-          {currentAccount === "" ? renderNotConnectedContainer() : renderSellNFTUI()}
+          {currentAccount === "" ? renderNotConnectedContainer() : renderMainUI()}
+          {renderDialog()}
         </Box>
       </main>
       {/* Footer */}
