@@ -54,6 +54,8 @@ const App = () => {
   const [currentAccount, setCurrentAccount] = React.useState("");
   const [tabValue, setTabValue] = React.useState("all");
   const [openBuyDialog, setOpenBuyDialog] = React.useState(false);
+  const [openSellerDialog, setOpenSellerDialog] = React.useState(false);
+  const [openBuyerDialog, setOpenBuyerDialog] = React.useState(false);
   const [selectedNFTAddress, setSelectedNFTAddress] = React.useState('');
   const [selectedTokenID, setSelectedTokenID] = React.useState('');
   const contractAddress = "0xfBbceA894e0BbA35FBB71a76933b6Ea4a6667148";
@@ -120,15 +122,20 @@ const App = () => {
 
   const renderNFTs = (tabValue) => {
     var swaps;
+    var handler;
     switch (tabValue) {
       case "all":
         swaps = allSwaps.filter((swap) => swap.sellerAddress != ethers.utils.getAddress("0x0000000000000000000000000000000000000000") && swap.buyerAddress === ethers.utils.getAddress("0x0000000000000000000000000000000000000000"));
+        handler = handleClickOpenBuyDialog
         break;
       case "buy":
         swaps = allSwaps.filter((swap) => swap.buyerAddress === ethers.utils.getAddress(currentAccount));
+        handler = handleOpenBuyerDialog
         break;
       case "sell":
         swaps = allSwaps.filter((swap) => swap.sellerAddress === ethers.utils.getAddress(currentAccount));
+        handler = handleOpenSellerDialog
+        break;
     }
     return (
       <Grid container spacing={4}>
@@ -155,8 +162,7 @@ const App = () => {
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button size="small">View</Button>
-                <Button size="small" address={swap.sellerNftAddress} tokenid={swap.sellerTokenID} onClick={(e) => handleClickOpenBuyDialog(e)}>Buy</Button>
+                <Button size="small" address={swap.sellerNftAddress} tokenid={swap.sellerTokenID} onClick={(e) => handler(e)}>View</Button>
               </CardActions>
             </Card>
           </Grid>
@@ -226,7 +232,6 @@ const App = () => {
     setOpenBuyDialog(false);
   };
 
-
   const renderBuyDialog = () => (
     <Dialog open={openBuyDialog} onClose={handleCloseBuyDialog}>
       <DialogTitle>Buy NFT</DialogTitle>
@@ -241,6 +246,63 @@ const App = () => {
         <Button onClick={approveNFT}>Approve</Button>
         <Button onClick={submitBuy}>Buy</Button>
         <Button onClick={handleCloseBuyDialog}>Close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  const handleOpenSellerDialog = async (e) => {
+    setSelectedNFTAddress(e.currentTarget.getAttribute("address"));
+    setSelectedTokenID(e.currentTarget.getAttribute("tokenid"));
+    setOpenSellerDialog(true);
+  };
+
+  const handleCloseSellerDialog = () => {
+    setSelectedNFTAddress('');
+    setSelectedTokenID('');
+    setOpenSellerDialog(false);
+  };
+
+  const renderSellerDialog = () => (
+    <Dialog open={openSellerDialog} onClose={handleCloseSellerDialog}>
+      <DialogTitle>Sell My NFT</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Sell NFT Address: {selectedNFTAddress}
+          Sell TokenID: {selectedTokenID}
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={submitSellerAccept}>Accept</Button>
+        <Button onClick={submitSellerCancel}>Decline</Button>
+        <Button onClick={handleCloseSellerDialog}>Close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+
+  const handleOpenBuyerDialog = async (e) => {
+    setSelectedNFTAddress(e.currentTarget.getAttribute("address"));
+    setSelectedTokenID(e.currentTarget.getAttribute("tokenid"));
+    setOpenBuyerDialog(true);
+  };
+
+  const handleCloseBuyerDialog = () => {
+    setSelectedNFTAddress('');
+    setSelectedTokenID('');
+    setOpenBuyerDialog(false);
+  };
+
+  const renderBuyerDialog = () => (
+    <Dialog open={openBuyerDialog} onClose={handleCloseBuyerDialog}>
+      <DialogTitle>Buy NFT</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Sell NFT Address: {selectedNFTAddress}
+          Sell TokenID: {selectedTokenID}
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={submitBuyerCancel}>Withdraw</Button>
+        <Button onClick={handleCloseBuyerDialog}>Close</Button>
       </DialogActions>
     </Dialog>
   );
@@ -303,6 +365,75 @@ const App = () => {
 
         await txn.wait();
         console.log("Mined -- ", txn.hash);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const submitSellerAccept = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        console.log("submitSellerAccept")
+        // const provider = new ethers.providers.Web3Provider(ethereum);
+        // const signer = provider.getSigner();
+        // const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        // let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        // console.log("Mining...", txn.hash);
+
+        // await txn.wait();
+        // console.log("Mined -- ", txn.hash);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const submitSellerCancel = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        console.log("submitSellerCancel")
+        // const provider = new ethers.providers.Web3Provider(ethereum);
+        // const signer = provider.getSigner();
+        // const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        // let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        // console.log("Mining...", txn.hash);
+
+        // await txn.wait();
+        // console.log("Mined -- ", txn.hash);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const submitBuyerCancel = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        console.log("submitBuyerCancel")
+        // const provider = new ethers.providers.Web3Provider(ethereum);
+        // const signer = provider.getSigner();
+        // const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        // let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        // console.log("Mining...", txn.hash);
+
+        // await txn.wait();
+        // console.log("Mined -- ", txn.hash);
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -377,6 +508,8 @@ const App = () => {
           </Container>
           {currentAccount === "" ? renderNotConnectedContainer() : renderMainUI()}
           {renderBuyDialog()}
+          {renderSellerDialog()}
+          {renderBuyerDialog()}
         </Box>
       </main>
       {/* Footer */}
