@@ -325,7 +325,8 @@ const App = () => {
       </DialogContent>
       <DialogActions>
         <Button onClick={submitSellerAccept}>Accept</Button>
-        <Button onClick={submitSellerCancel}>Decline</Button>
+        <Button onClick={submitSellerDecline}>Decline</Button>
+        <Button onClick={submitSellerCancel}>Withdrawal</Button>
         <Button onClick={handleCloseSellerDialog}>Close</Button>
       </DialogActions>
     </Dialog>
@@ -434,6 +435,29 @@ const App = () => {
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let txn = await nftSwapContract.sellerApprove(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, { gasLimit: 300000 });
+        console.log("Mining...", txn.hash);
+
+        await txn.wait();
+        console.log("Mined -- ", txn.hash);
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const submitSellerDecline = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        console.log("sellerDecline")
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        let txn = await nftSwapContract.sellerDecline(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
 
         await txn.wait();
