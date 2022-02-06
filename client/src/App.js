@@ -56,8 +56,7 @@ const App = () => {
   const [openBuyDialog, setOpenBuyDialog] = React.useState(false);
   const [openSellerDialog, setOpenSellerDialog] = React.useState(false);
   const [openBuyerDialog, setOpenBuyerDialog] = React.useState(false);
-  const [selectedNFTAddress, setSelectedNFTAddress] = React.useState('');
-  const [selectedTokenID, setSelectedTokenID] = React.useState('');
+  const [selectedSwap, setSelectedSwap] = React.useState({});
   const contractAddress = "0xfBbceA894e0BbA35FBB71a76933b6Ea4a6667148";
   const contractABI = swap_abi.abi;
   const nftContractABI = nft_abi.abi;
@@ -162,7 +161,7 @@ const App = () => {
                 </Typography>
               </CardContent>
               <CardActions>
-                <Button size="small" address={swap.sellerNftAddress} tokenid={swap.sellerTokenID} onClick={(e) => handler(e)}>View</Button>
+                <Button size="small" onClick={(e) => handler(swap)}>View</Button>
               </CardActions>
             </Card>
           </Grid>
@@ -220,15 +219,13 @@ const App = () => {
       </React.Fragment>
   );
 
-  const handleClickOpenBuyDialog = async (e) => {
-    setSelectedNFTAddress(e.currentTarget.getAttribute("address"));
-    setSelectedTokenID(e.currentTarget.getAttribute("tokenid"));
+  const handleClickOpenBuyDialog = async (swap) => {
+    setSelectedSwap(swap)
     setOpenBuyDialog(true);
   };
 
   const handleCloseBuyDialog = () => {
-    setSelectedNFTAddress('');
-    setSelectedTokenID('');
+    setSelectedSwap({});
     setOpenBuyDialog(false);
   };
 
@@ -250,15 +247,13 @@ const App = () => {
     </Dialog>
   );
 
-  const handleOpenSellerDialog = async (e) => {
-    setSelectedNFTAddress(e.currentTarget.getAttribute("address"));
-    setSelectedTokenID(e.currentTarget.getAttribute("tokenid"));
+  const handleOpenSellerDialog = async (swap) => {
+    setSelectedSwap(swap)
     setOpenSellerDialog(true);
   };
 
   const handleCloseSellerDialog = () => {
-    setSelectedNFTAddress('');
-    setSelectedTokenID('');
+    setSelectedSwap({});
     setOpenSellerDialog(false);
   };
 
@@ -267,8 +262,8 @@ const App = () => {
       <DialogTitle>Sell My NFT</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Sell NFT Address: {selectedNFTAddress}
-          Sell TokenID: {selectedTokenID}
+          Sell NFT Address: {selectedSwap.sellerNftAddress}
+          Sell TokenID: {selectedSwap.sellerTokenID}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
@@ -279,15 +274,13 @@ const App = () => {
     </Dialog>
   );
 
-  const handleOpenBuyerDialog = async (e) => {
-    setSelectedNFTAddress(e.currentTarget.getAttribute("address"));
-    setSelectedTokenID(e.currentTarget.getAttribute("tokenid"));
+  const handleOpenBuyerDialog = async (swap) => {
+    setSelectedSwap(swap)
     setOpenBuyerDialog(true);
   };
 
   const handleCloseBuyerDialog = () => {
-    setSelectedNFTAddress('');
-    setSelectedTokenID('');
+    setSelectedSwap({})
     setOpenBuyerDialog(false);
   };
 
@@ -296,8 +289,8 @@ const App = () => {
       <DialogTitle>Buy NFT</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Sell NFT Address: {selectedNFTAddress}
-          Sell TokenID: {selectedTokenID}
+          Sell NFT Address: {selectedSwap.sellerNftAddress}
+          Sell TokenID: {selectedSwap.sellerTokenID}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
@@ -360,7 +353,7 @@ const App = () => {
         const signer = provider.getSigner();
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        let txn = await nftSwapContract.buyerDepositNFT(selectedSwap.sellerAddress, selectedSwap.sellerTokenID, nftAddress, tokenId, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -379,15 +372,15 @@ const App = () => {
 
       if (ethereum) {
         console.log("submitSellerAccept")
-        // const provider = new ethers.providers.Web3Provider(ethereum);
-        // const signer = provider.getSigner();
-        // const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        // let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
-        // console.log("Mining...", txn.hash);
+        let txn = await nftSwapContract.sellerApprove(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, { gasLimit: 300000 });
+        console.log("Mining...", txn.hash);
 
-        // await txn.wait();
-        // console.log("Mined -- ", txn.hash);
+        await txn.wait();
+        console.log("Mined -- ", txn.hash);
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -402,15 +395,15 @@ const App = () => {
 
       if (ethereum) {
         console.log("submitSellerCancel")
-        // const provider = new ethers.providers.Web3Provider(ethereum);
-        // const signer = provider.getSigner();
-        // const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        // let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
-        // console.log("Mining...", txn.hash);
+        let txn = await nftSwapContract.sellerCancel(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        console.log("Mining...", txn.hash);
 
-        // await txn.wait();
-        // console.log("Mined -- ", txn.hash);
+        await txn.wait();
+        console.log("Mined -- ", txn.hash);
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -425,15 +418,15 @@ const App = () => {
 
       if (ethereum) {
         console.log("submitBuyerCancel")
-        // const provider = new ethers.providers.Web3Provider(ethereum);
-        // const signer = provider.getSigner();
-        // const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        // let txn = await nftSwapContract.buyerDepositNFT(selectedNFTAddress, selectedTokenID, nftAddress, tokenId, { gasLimit: 300000 });
-        // console.log("Mining...", txn.hash);
+        let txn = await nftSwapContract.buyerCancel(selectedSwap.buyerNftAddress, selectedSwap.buyerTokenID, { gasLimit: 300000 });
+        console.log("Mining...", txn.hash);
 
-        // await txn.wait();
-        // console.log("Mined -- ", txn.hash);
+        await txn.wait();
+        console.log("Mined -- ", txn.hash);
       } else {
         console.log("Ethereum object doesn't exist!");
       }
