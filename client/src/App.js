@@ -315,8 +315,16 @@ const App = () => {
       <DialogTitle>Sell My NFT</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Sell NFT Address: {selectedSwap.sellerNftAddress}
-          Sell TokenID: {selectedSwap.sellerTokenID}
+          Seller NFT Address: {selectedSwap.sellerNftAddress}
+        </DialogContentText>
+        <DialogContentText>
+          Seller TokenID: {selectedSwap.sellerTokenID}
+        </DialogContentText>
+        <DialogContentText>
+          Buyer NFT Address: {selectedSwap.buyerNftAddress === "0x0000000000000000000000000000000000000000" ? "None": selectedSwap.buyerNftAddress}
+        </DialogContentText>
+        <DialogContentText>
+          Buyer TokenID: {selectedSwap.buyerNftAddress === "0x0000000000000000000000000000000000000000" ? "None": selectedSwap.buyerTokenID}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
@@ -344,7 +352,15 @@ const App = () => {
       <DialogContent>
         <DialogContentText>
           Sell NFT Address: {selectedSwap.sellerNftAddress}
+        </DialogContentText>
+        <DialogContentText>
           Sell TokenID: {selectedSwap.sellerTokenID}
+        </DialogContentText>
+        <DialogContentText>
+          Buyer NFT Address: {selectedSwap.buyerNftAddress === "0x0000000000000000000000000000000000000000" ? "None": selectedSwap.buyerNftAddress}
+        </DialogContentText>
+        <DialogContentText>
+          Buyer TokenID: {selectedSwap.buyerNftAddress === "0x0000000000000000000000000000000000000000" ? "None": selectedSwap.buyerTokenID}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
