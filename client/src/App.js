@@ -57,7 +57,7 @@ const App = () => {
   const [openSellerDialog, setOpenSellerDialog] = React.useState(false);
   const [openBuyerDialog, setOpenBuyerDialog] = React.useState(false);
   const [selectedSwap, setSelectedSwap] = React.useState({});
-  const contractAddress = "0x9f933E6F9cfdbc713C64e9ADf1eA3e61AeB6618E";
+  const contractAddress = "0x731f8900DAB2748D80e6fdA1736406a53c4B8e93";
   const contractABI = swap_abi.abi;
   const nftContractABI = nft_abi.abi;
 
