@@ -57,7 +57,7 @@ const App = () => {
   const [openSellerDialog, setOpenSellerDialog] = React.useState(false);
   const [openBuyerDialog, setOpenBuyerDialog] = React.useState(false);
   const [selectedSwap, setSelectedSwap] = React.useState({});
-  const contractAddress = "0x55728f498d66498F8ca0313475a8C2a09B4489dd";
+  const contractAddress = "0x9f933E6F9cfdbc713C64e9ADf1eA3e61AeB6618E";
   const contractABI = swap_abi.abi;
   const nftContractABI = nft_abi.abi;
 
@@ -275,6 +275,8 @@ const App = () => {
   const handleClickOpenBuyDialog = async (swap) => {
     setSelectedSwap(swap)
     setOpenBuyDialog(true);
+    setNftAddress('')
+    setTokenId('')
   };
 
   const handleCloseBuyDialog = () => {
@@ -378,9 +380,9 @@ const App = () => {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const nftContract = new ethers.Contract(nftAddress, nftContractABI, signer);
-
         const txn = await nftContract.approve(contractAddress, tokenId, { gasLimit: 300000 });
-        console.log("Mining...", txn.hash);
+        alert(`transaction: ${txn.hash}`)
+        console.log("Mining...", txn);
 
         await txn.wait();
         console.log("Mined -- ", txn.hash);
@@ -402,6 +404,7 @@ const App = () => {
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let txn = await nftSwapContract.sellerDepositNFT(nftAddress, tokenId, { gasLimit: 300000 });
+        alert(`transaction: ${txn.hash}`)
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -423,7 +426,8 @@ const App = () => {
         const signer = provider.getSigner();
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-        let txn = await nftSwapContract.buyerDepositNFT(selectedSwap.sellerAddress, selectedSwap.sellerTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        let txn = await nftSwapContract.buyerDepositNFT(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, nftAddress, tokenId, { gasLimit: 300000 });
+        alert(`transaction: ${txn.hash}`)
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -447,6 +451,7 @@ const App = () => {
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let txn = await nftSwapContract.sellerApprove(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, { gasLimit: 300000 });
+        alert(`transaction: ${txn.hash}`)
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -470,6 +475,7 @@ const App = () => {
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let txn = await nftSwapContract.sellerDecline(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, { gasLimit: 300000 });
+        alert(`transaction: ${txn.hash}`)
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -493,6 +499,7 @@ const App = () => {
         const nftSwapContract = new ethers.Contract(contractAddress, contractABI, signer);
 
         let txn = await nftSwapContract.sellerCancel(selectedSwap.sellerNftAddress, selectedSwap.sellerTokenID, { gasLimit: 300000 });
+        alert(`transaction: ${txn.hash}`)
         console.log("Mining...", txn.hash);
 
         await txn.wait();
@@ -517,6 +524,7 @@ const App = () => {
 
         let txn = await nftSwapContract.buyerCancel(selectedSwap.buyerNftAddress, selectedSwap.buyerTokenID, { gasLimit: 300000 });
         console.log("Mining...", txn.hash);
+        alert(`transaction: ${txn.hash}`)
 
         await txn.wait();
         console.log("Mined -- ", txn.hash);

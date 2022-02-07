@@ -7,18 +7,18 @@ import "hardhat/console.sol";
 
 // We inherit the contract we imported. This means we'll have access
 // to the inherited contract's methods.
-contract MyTestNFT is ERC721URIStorage {
+contract PatrickStarNFT is ERC721URIStorage {
   // Magic given to us by OpenZeppelin to help us keep track of tokenIds.
   using Counters for Counters.Counter;
   Counters.Counter private _tokenIds;
 
   // We need to pass the name of our NFTs token and its symbol.
-  constructor() ERC721 ("SquareNFT", "SQUARE") {
+  constructor() ERC721 ("PatrickStarNFT", "PatrickStarNFT") {
     console.log("This is test NFT contract!");
   }
 
   // A function our user will hit to get their NFT.
-  function makeAnTestNFT() public returns (uint256) {
+  function makeAnNFT() public returns (uint256) {
     console.log("minting NFT");
      // Get the current tokenId, this starts at 0.
     uint256 newItemId = _tokenIds.current();
@@ -27,7 +27,7 @@ contract MyTestNFT is ERC721URIStorage {
     _safeMint(msg.sender, newItemId);
 
     // Set the NFTs data.
-    _setTokenURI(newItemId, "https://jsonkeeper.com/b/6REQ");
+    _setTokenURI(newItemId, "https://api.npoint.io/362000d36c0b0e1c58ff");
 
     console.log("An NFT w/ ID %s has been minted to %s", newItemId, msg.sender);
 
